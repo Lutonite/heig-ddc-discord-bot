@@ -9,6 +9,7 @@ import 'dayjs/locale/fr-ch';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import weekday from 'dayjs/plugin/weekday';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -18,13 +19,17 @@ import { cert, initializeApp } from 'firebase-admin/app';
 import { type Firestore, getFirestore } from 'firebase-admin/firestore';
 import IORedis, { type Redis } from 'ioredis';
 
-dayjs.extend(utc);
-dayjs.extend(weekOfYear);
-dayjs.extend(weekday);
-dayjs.extend(localizedFormat);
-dayjs.extend(duration);
-dayjs.extend(relativeTime);
 dayjs.extend(dayjsParser);
+dayjs.extend(duration);
+dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
+dayjs.extend(timezone);
+dayjs.extend(utc);
+dayjs.extend(weekday);
+dayjs.extend(weekOfYear);
+
+dayjs.locale('fr-ch');
+dayjs.tz.setDefault('Europe/Zurich');
 
 initializeApp({
     credential: cert({

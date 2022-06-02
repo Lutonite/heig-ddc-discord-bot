@@ -1,4 +1,4 @@
-import type { GuildHomework } from '#src/database/guild-homework';
+import type { GuildClassHomework } from '#src/database/guild-class-homework';
 import { errorEmbed, successEmbed } from '#src/utils/embed-utils';
 import { converter, getGuildCollection } from '#src/utils/firestore-utils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -149,13 +149,14 @@ export default class HomeworkCommand extends SubCommandPluginCommand {
         const dueDate = await args.pick('dayjs');
         const description = await args.rest('string');
 
-        const homework: GuildHomework = {
-            module: channel.id,
+        const guildDb = await this.getHomeworkCollection(message.guild);
+
+        const homework: GuildClassHomework = {
             description,
             date: dueDate.toISOString(),
+            session: guildDb.doc(),
         };
 
-        const guildDb = await this.getHomeworkCollection(message.guild);
         const doc = await guildDb.add(homework);
 
         message.channel.send({
@@ -199,7 +200,9 @@ export default class HomeworkCommand extends SubCommandPluginCommand {
                     new MessageEmbed()
                         .setColor('#6CC070')
                         .setTitle(
-                            `Homework modified for ${homework.data()?.module}`,
+                            `Homework modified for ${
+                                homework.data()?.session.id
+                            }`,
                         )
                         .setDescription(`ID: \`${homeworkRef.id}\``)
                         .addFields(
@@ -244,11 +247,11 @@ export default class HomeworkCommand extends SubCommandPluginCommand {
     }
 
     private async generateEmbedFieldData(
-        hws: DocumentSnapshot<GuildHomework>[],
+        hws: DocumentSnapshot<GuildClassHomework>[],
     ): Promise<EmbedFieldData[]> {
         return Promise.all(
             hws.map(async (hw, i) => {
-                const channelId = hw.data()?.module ?? '';
+                const channelId = hw.data()?.session.id ?? '';
                 const channel = (await this.container.client.channels.fetch(
                     channelId,
                 )) as TextChannel;
@@ -269,9 +272,11 @@ export default class HomeworkCommand extends SubCommandPluginCommand {
 
     private getHomeworkCollection(
         guild: Guild,
-    ): Promise<CollectionReference<GuildHomework>> {
+    ): Promise<CollectionReference<GuildClassHomework>> {
         return getGuildCollection(guild).then((c) =>
-            c.collection('homeworks').withConverter(converter<GuildHomework>()),
+            c
+                .collection('homeworks')
+                .withConverter(converter<GuildClassHomework>()),
         );
     }
 }
